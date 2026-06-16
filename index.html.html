@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sandviç İşletme Kâr Hesaplama</title>
+  <style>
+    :root{
+      --bg:#0f1115;
+      --panel:#171a21;
+      --panel2:#1f2430;
+      --text:#f4f4f5;
+      --muted:#a1a1aa;
+      --border:#303642;
+      --good:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --accent:#60a5fa;
+      --input:#0f131b;
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #1c2330 0, var(--bg) 45%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1260px;
+      margin:0 auto;
+      padding:24px;
+    }
+    header{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:28px;
+      letter-spacing:.2px;
+    }
+    .sub{
+      color:var(--muted);
+      line-height:1.4;
+      font-size:14px;
+    }
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    button{
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.15s ease;
+    }
+    button:hover{transform:translateY(-1px); border-color:#4b5563}
+    button.primary{background:#1d4ed8; border-color:#2563eb}
+    button.danger{background:#3a1518; border-color:#7f1d1d}
+    button.small{padding:7px 10px; border-radius:10px; font-size:12px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:16px;
+    }
+    @media(max-width:980px){
+      .grid{grid-template-columns:1fr}
+      header{flex-direction:column}
+      .actions{justify-content:flex-start}
+    }
+    .card{
+      background:rgba(23,26,33,.92);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    .card h2{
+      margin:0 0 12px;
+      font-size:18px;
+    }
+    .settings{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:12px;
+    }
+    @media(max-width:900px){.settings{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:560px){.settings{grid-template-columns:1fr}}
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    input, select{
+      width:100%;
+      background:var(--input);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:11px;
+      outline:none;
+    }
+    input:focus, select:focus{border-color:var(--accent)}
+    .table-wrap{
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:14px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:920px;
+    }
+    th, td{
+      padding:10px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      vertical-align:middle;
+      font-size:13px;
+    }
+    th{
+      color:#d4d4d8;
+      background:#111722;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tr:last-child td{border-bottom:0}
+    td input{padding:8px; border-radius:9px}
+    .num{text-align:right; white-space:nowrap}
+    .muted{color:var(--muted)}
+    .summary{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+    }
+    @media(max-width:560px){.summary{grid-template-columns:1fr}}
+    .metric{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      min-height:76px;
+    }
+    .metric .label{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+    .metric .value{
+      font-size:22px;
+      font-weight:800;
+    }
+    .metric .note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:5px;
+      line-height:1.35;
+    }
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .warn{color:var(--warn)}
+    .row-actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      margin:12px 0 0;
+      flex-wrap:wrap;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+    .expense-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .expense-row{
+      display:grid;
+      grid-template-columns:1fr 140px auto;
+      gap:8px;
+      align-items:center;
+    }
+    @media(max-width:560px){
+      .expense-row{grid-template-columns:1fr}
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 9px;
+      border-radius:999px;
+      background:#111722;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:12px;
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+    .footer-note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+    .scenario{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media(max-width:720px){.scenario{grid-template-columns:1fr}}
+    .scenario-card{
+      border:1px solid var(--border);
+      background:#111722;
+      border-radius:14px;
+      padding:12px;
+    }
+    .scenario-card h3{
+      margin:0 0 8px;
+      font-size:14px;
+    }
+    .scenario-card .big{
+      font-size:20px;
+      font-weight:800;
+    }
+    .top-products{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .top-item{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#111722;
+    }
+    .top-item strong{font-size:13px}
+    .top-item span{font-size:12px;color:var(--muted)}
+    @media print{
+      body{background:white;color:black}
+      .card{box-shadow:none;background:white;color:black}
+      input, select, button, .actions{display:none !important}
+      .table-wrap{overflow:visible}
+      th{position:static}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Sandviç İşletme Kâr Hesaplama</h1>
+        <div class="sub">
+          Ürün maliyeti, satış fiyatı, komisyon, günlük satış adedi ve sabit giderlere göre aylık net kâr hesabı.
+          Veriler tarayıcıda otomatik kaydedilir.
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="addProduct()">+ Ürün Ekle</button>
+        <button onclick="addExpense()">+ Sabit Gider Ekle</button>
+        <button onclick="exportCSV()">CSV İndir</button>
+        <button onclick="window.print()">Yazdır</button>
+        <button class="danger" onclick="resetAll()">Sıfırla</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>Genel Ayarlar</h2>
+      <div class="settings">
+        <div>
+          <label>Aylık çalışma günü</label>
+          <input id="workDays" type="number" min="1" step="1" value="26" oninput="saveAndCalc()">
+        </div>
+        <div>
+          <label>Varsayılan komisyon (%)</label>
+          <input id="defaultCommission" type="number" min="0" step="0.1" value="35" oninput="saveAndCalc()">
+        </div>
+        <div>
+          <label>KDV / ekstra oran (%) - opsiyonel</label>
+          <input id="extraRate" type="number" min="0" step="0.1" value="0" oninput="saveAndCalc()">
+        </div>
+        <div>
+          <label>Hedef aylık net kâr (TL)</label>
+          <input id="targetProfit" type="number" min="0" step="1000" value="65000" oninput="saveAndCalc()">
+        </div>
+      </div>
+      <div class="footer-note">
+        Not: Komisyon ürün satışı üzerinden düşülür. “KDV / ekstra oran” alanını kullanmak istemezsen 0 bırak. Her ürünün kendi komisyonu boş bırakılırsa varsayılan komisyon kullanılır.
+      </div>
+    </div>
+
+    <div class="grid">
+      <main>
+        <div class="card">
+          <h2>Ürünler</h2>
+          <div class="table-wrap">
+            <table id="productsTable">
+              <thead>
+                <tr>
+                  <th>Ürün</th>
+                  <th>Maliyet / Adet</th>
+                  <th>Satış Fiyatı</th>
+                  <th>Komisyon %</th>
+                  <th>Günlük Satış</th>
+                  <th>Adet Kârı</th>
+                  <th>Aylık Kâr</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productsBody"></tbody>
+            </table>
+          </div>
+          <div class="row-actions">
+            <button class="primary" onclick="addProduct()">+ Ürün Ekle</button>
+            <div class="hint">Örnek: Sandviç 380 TL, maliyet 110 TL, komisyon %35, günlük satış 25 adet.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Sabit Giderler</h2>
+          <div id="expenseList" class="expense-list"></div>
+          <div class="row-actions">
+            <button onclick="addExpense()">+ Sabit Gider Ekle</button>
+            <div class="hint">Kira, elektrik, su, internet, muhasebe, personel, temizlik, POS, yazılım vb.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Senaryo Hızlı Kontrol</h2>
+          <div class="scenario" id="scenarioBox"></div>
+          <div class="footer-note">
+            Senaryolar, mevcut ürünlerin ortalama adet kârına göre tahmini net kâr üretir. Daha net hesap için ürünlerin günlük satış adetlerini ayrı ayrı gir.
+          </div>
+        </div>
+      </main>
+
+      <aside>
+        <div class="card">
+          <h2>Özet</h2>
+          <div class="summary">
+            <div class="metric">
+              <div class="label">Aylık ciro</div>
+              <div id="monthlyRevenue" class="value">₺0</div>
+            </div>
+            <div class="metric">
+              <div class="label">Aylık komisyon</div>
+              <div id="monthlyCommission" class="value warn">₺0</div>
+            </div>
+            <div class="metric">
+              <div class="label">Aylık ürün maliyeti</div>
+              <div id="monthlyCost" class="value warn">₺0</div>
+            </div>
+            <div class="metric">
+              <div class="label">Sabit gider</div>
+              <div id="monthlyFixed" class="value warn">₺0</div>
+            </div>
+            <div class="metric">
+              <div class="label">Aylık net kâr</div>
+              <div id="netProfit" class="value">₺0</div>
+              <div id="netProfitNote" class="note"></div>
+            </div>
+            <div class="metric">
+              <div class="label">Günlük net ortalama</div>
+              <div id="dailyNet" class="value">₺0</div>
+            </div>
+            <div class="metric">
+              <div class="label">Başa baş satış</div>
+              <div id="breakEven" class="value">0 adet/gün</div>
+              <div class="note">Sabit gideri karşılamak için yaklaşık gerekli günlük adet.</div>
+            </div>
+            <div class="metric">
+              <div class="label">Hedef kâr için satış</div>
+              <div id="targetUnits" class="value">0 adet/gün</div>
+              <div class="note">Sabit gider + hedef net kâr için yaklaşık günlük adet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>En Çok Kâr Getirenler</h2>
+          <div id="topProducts" class="top-products"></div>
+        </div>
+
+        <div class="card">
+          <h2>Kontrol Listesi</h2>
+          <span class="pill">Ekmek maliyeti</span>
+          <span class="pill">Ana malzeme gramajı</span>
+          <span class="pill">Ambalaj</span>
+          <span class="pill">Platform komisyonu</span>
+          <span class="pill">Fire payı</span>
+          <span class="pill">Günlük satış</span>
+          <div class="footer-note">
+            Ürün maliyetine fire/ambalaj/sos dahil girersen sonuç daha gerçekçi olur.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+const money = new Intl.NumberFormat('tr-TR', { style:'currency', currency:'TRY', maximumFractionDigits:0 });
+const numberFmt = new Intl.NumberFormat('tr-TR', { maximumFractionDigits:1 });
+
+let state = {
+  workDays: 26,
+  defaultCommission: 35,
+  extraRate: 0,
+  targetProfit: 65000,
+  products: [
+    { id: crypto.randomUUID(), name: "İmza Sandviç", cost: 110, price: 380, commission: "", qty: 25 },
+    { id: crypto.randomUUID(), name: "Premium Sandviç", cost: 145, price: 430, commission: "", qty: 8 },
+    { id: crypto.randomUUID(), name: "İçecek", cost: 30, price: 95, commission: "", qty: 18 }
+  ],
+  expenses: [
+    { id: crypto.randomUUID(), name: "Kira", amount: 28000 },
+    { id: crypto.randomUUID(), name: "Elektrik / Su / Doğalgaz", amount: 8000 },
+    { id: crypto.randomUUID(), name: "İnternet / POS / Yazılım", amount: 2500 },
+    { id: crypto.randomUUID(), name: "Muhasebe", amount: 2500 }
+  ]
+};
+
+function load(){
+  try{
+    const saved = localStorage.getItem('sandwich_calc_v2');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+    }
+  } catch(e){ console.warn(e); }
+  document.getElementById('workDays').value = state.workDays;
+  document.getElementById('defaultCommission').value = state.defaultCommission;
+  document.getElementById('extraRate').value = state.extraRate;
+  document.getElementById('targetProfit').value = state.targetProfit;
+  render();
+}
+
+function save(){
+  localStorage.setItem('sandwich_calc_v2', JSON.stringify(state));
+}
+
+function readSettings(){
+  state.workDays = Math.max(1, Number(document.getElementById('workDays').value || 1));
+  state.defaultCommission = Math.max(0, Number(document.getElementById('defaultCommission').value || 0));
+  state.extraRate = Math.max(0, Number(document.getElementById('extraRate').value || 0));
+  state.targetProfit = Math.max(0, Number(document.getElementById('targetProfit').value || 0));
+}
+
+function saveAndCalc(){
+  readSettings();
+  save();
+  calc();
+}
+
+function render(){
+  renderProducts();
+  renderExpenses();
+  calc();
+}
+
+function renderProducts(){
+  const body = document.getElementById('productsBody');
+  body.innerHTML = '';
+  state.products.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input value="${escapeHtml(p.name)}" onchange="updateProduct('${p.id}','name',this.value)"></td>
+      <td><input type="number" min="0" step="0.01" value="${p.cost}" onchange="updateProduct('${p.id}','cost',this.value)"></td>
+      <td><input type="number" min="0" step="0.01" value="${p.price}" onchange="updateProduct('${p.id}','price',this.value)"></td>
+      <td><input type="number" min="0" step="0.1" placeholder="${state.defaultCommission}" value="${p.commission}" onchange="updateProduct('${p.id}','commission',this.value)"></td>
+      <td><input type="number" min="0" step="1" value="${p.qty}" onchange="updateProduct('${p.id}','qty',this.value)"></td>
+      <td class="num" id="unitProfit-${p.id}">₺0</td>
+      <td class="num" id="monthlyProfit-${p.id}">₺0</td>
+      <td class="num"><button class="small danger" onclick="removeProduct('${p.id}')">Sil</button></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function renderExpenses(){
+  const list = document.getElementById('expenseList');
+  list.innerHTML = '';
+  state.expenses.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'expense-row';
+    div.innerHTML = `
+      <input value="${escapeHtml(e.name)}" onchange="updateExpense('${e.id}','name',this.value)">
+      <input type="number" min="0" step="0.01" value="${e.amount}" onchange="updateExpense('${e.id}','amount',this.value)">
+      <button class="small danger" onclick="removeExpense('${e.id}')">Sil</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function addProduct(){
+  state.products.push({
+    id: crypto.randomUUID(),
+    name: "Yeni Ürün",
+    cost: 0,
+    price: 0,
+    commission: "",
+    qty: 0
+  });
+  save();
+  renderProducts();
+  calc();
+}
+
+function removeProduct(id){
+  state.products = state.products.filter(p => p.id !== id);
+  save();
+  render();
+}
+
+function updateProduct(id, key, value){
+  const p = state.products.find(x => x.id === id);
+  if(!p) return;
+  if(key === 'name'){
+    p[key] = value;
+  } else if(key === 'commission'){
+    p[key] = value === '' ? '' : Math.max(0, Number(value || 0));
+  } else {
+    p[key] = Math.max(0, Number(value || 0));
+  }
+  saveAndCalc();
+}
+
+function addExpense(){
+  state.expenses.push({
+    id: crypto.randomUUID(),
+    name: "Yeni Gider",
+    amount: 0
+  });
+  save();
+  renderExpenses();
+  calc();
+}
+
+function removeExpense(id){
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  save();
+  render();
+}
+
+function updateExpense(id, key, value){
+  const e = state.expenses.find(x => x.id === id);
+  if(!e) return;
+  e[key] = key === 'name' ? value : Math.max(0, Number(value || 0));
+  saveAndCalc();
+}
+
+function getCommission(p){
+  return p.commission === '' || p.commission === null || isNaN(Number(p.commission))
+    ? Number(state.defaultCommission || 0)
+    : Number(p.commission);
+}
+
+function calcProduct(p){
+  const commissionRate = getCommission(p) / 100;
+  const extraRate = Number(state.extraRate || 0) / 100;
+  const commission = p.price * commissionRate;
+  const extra = p.price * extraRate;
+  const unitProfit = p.price - commission - extra - p.cost;
+  const dailyRevenue = p.price * p.qty;
+  const dailyCommission = commission * p.qty;
+  const dailyExtra = extra * p.qty;
+  const dailyCost = p.cost * p.qty;
+  const dailyProfit = unitProfit * p.qty;
+  const monthlyProfit = dailyProfit * state.workDays;
+  return { commission, extra, unitProfit, dailyRevenue, dailyCommission, dailyExtra, dailyCost, dailyProfit, monthlyProfit };
+}
+
+function calc(){
+  readSettings();
+
+  let dailyRevenue = 0;
+  let dailyCommission = 0;
+  let dailyExtra = 0;
+  let dailyCost = 0;
+  let dailyGrossProfit = 0;
+  let totalQty = 0;
+
+  const productCalcs = state.products.map(p => {
+    const c = calcProduct(p);
+    dailyRevenue += c.dailyRevenue;
+    dailyCommission += c.dailyCommission;
+    dailyExtra += c.dailyExtra;
+    dailyCost += c.dailyCost;
+    dailyGrossProfit += c.dailyProfit;
+    totalQty += Number(p.qty || 0);
+
+    const up = document.getElementById(`unitProfit-${p.id}`);
+    const mp = document.getElementById(`monthlyProfit-${p.id}`);
+    if(up){
+      up.textContent = money.format(c.unitProfit);
+      up.className = 'num ' + (c.unitProfit >= 0 ? 'good' : 'bad');
+    }
+    if(mp){
+      mp.textContent = money.format(c.monthlyProfit);
+      mp.className = 'num ' + (c.monthlyProfit >= 0 ? 'good' : 'bad');
+    }
+    return { product:p, ...c };
+  });
+
+  const monthlyRevenue = dailyRevenue * state.workDays;
+  const monthlyCommission = dailyCommission * state.workDays;
+  const monthlyExtra = dailyExtra * state.workDays;
+  const monthlyCost = dailyCost * state.workDays;
+  const fixed = state.expenses.reduce((sum,e) => sum + Number(e.amount || 0), 0);
+  const grossProfit = dailyGrossProfit * state.workDays;
+  const netProfit = grossProfit - fixed;
+  const dailyNet = netProfit / state.workDays;
+
+  const avgUnitProfit = totalQty > 0 ? dailyGrossProfit / totalQty : averagePositiveUnitProfit(productCalcs);
+  const breakEvenUnits = avgUnitProfit > 0 ? fixed / state.workDays / avgUnitProfit : 0;
+  const targetUnits = avgUnitProfit > 0 ? (fixed + state.targetProfit) / state.workDays / avgUnitProfit : 0;
+
+  setText('monthlyRevenue', money.format(monthlyRevenue));
+  setText('monthlyCommission', money.format(monthlyCommission + monthlyExtra));
+  setText('monthlyCost', money.format(monthlyCost));
+  setText('monthlyFixed', money.format(fixed));
+  setText('netProfit', money.format(netProfit));
+  setText('dailyNet', money.format(dailyNet));
+  setText('breakEven', `${numberFmt.format(breakEvenUnits)} adet/gün`);
+  setText('targetUnits', `${numberFmt.format(targetUnits)} adet/gün`);
+
+  const netEl = document.getElementById('netProfit');
+  netEl.className = 'value ' + (netProfit >= 0 ? 'good' : 'bad');
+
+  const note = document.getElementById('netProfitNote');
+  if(netProfit >= state.targetProfit){
+    note.textContent = `Hedefin üstünde: ${money.format(netProfit - state.targetProfit)} fazla.`;
+    note.className = 'note good';
+  } else {
+    note.textContent = `Hedefe kalan: ${money.format(state.targetProfit - netProfit)}.`;
+    note.className = 'note warn';
+  }
+
+  renderScenarios(avgUnitProfit, fixed);
+  renderTopProducts(productCalcs);
+  save();
+}
+
+function averagePositiveUnitProfit(productCalcs){
+  const positives = productCalcs.filter(x => x.unitProfit > 0);
+  if(!positives.length) return 0;
+  return positives.reduce((sum,x)=>sum+x.unitProfit,0) / positives.length;
+}
+
+function renderScenarios(avgUnitProfit, fixed){
+  const box = document.getElementById('scenarioBox');
+  const quantities = [20, 30, 40];
+  box.innerHTML = '';
+  quantities.forEach(q => {
+    const gross = q * avgUnitProfit * state.workDays;
+    const net = gross - fixed;
+    const div = document.createElement('div');
+    div.className = 'scenario-card';
+    div.innerHTML = `
+      <h3>${q} adet/gün</h3>
+      <div class="big ${net >= 0 ? 'good':'bad'}">${money.format(net)}</div>
+      <div class="hint">Tahmini aylık net kâr</div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+function renderTopProducts(productCalcs){
+  const box = document.getElementById('topProducts');
+  const sorted = productCalcs
+    .filter(x => x.product.name && x.product.price > 0)
+    .sort((a,b)=>b.unitProfit-a.unitProfit)
+    .slice(0,5);
+
+  if(!sorted.length){
+    box.innerHTML = '<div class="hint">Henüz ürün yok.</div>';
+    return;
+  }
+
+  box.innerHTML = sorted.map(x => `
+    <div class="top-item">
+      <div>
+        <strong>${escapeHtml(x.product.name)}</strong><br/>
+        <span>Adet kârı: ${money.format(x.unitProfit)}</span>
+      </div>
+      <div class="${x.unitProfit >= 0 ? 'good':'bad'}">${money.format(x.monthlyProfit)}</div>
+    </div>
+  `).join('');
+}
+
+function setText(id, text){
+  document.getElementById(id).textContent = text;
+}
+
+function exportCSV(){
+  const lines = [];
+  lines.push(["Tip","Ad","Maliyet","Fiyat","Komisyon %","Günlük Adet","Aylık Tutar"].join(";"));
+  state.products.forEach(p => {
+    const c = calcProduct(p);
+    lines.push([
+      "Ürün",
+      csvSafe(p.name),
+      p.cost,
+      p.price,
+      getCommission(p),
+      p.qty,
+      Math.round(c.monthlyProfit)
+    ].join(";"));
+  });
+  state.expenses.forEach(e => {
+    lines.push(["Sabit Gider", csvSafe(e.name), "", "", "", "", e.amount].join(";"));
+  });
+  const blob = new Blob(["\ufeff" + lines.join("\n")], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "sandvic_kar_hesabi.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function resetAll(){
+  if(!confirm("Tüm verileri sıfırlamak istiyor musun?")) return;
+  localStorage.removeItem('sandwich_calc_v2');
+  location.reload();
+}
+
+function csvSafe(v){
+  const s = String(v ?? "");
+  if(s.includes(";") || s.includes('"') || s.includes("\n")) return `"${s.replaceAll('"','""')}"`;
+  return s;
+}
+
+function escapeHtml(str){
+  return String(str ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+load();
+</script>
+</body>
+</html>
